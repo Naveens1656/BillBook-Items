@@ -1,134 +1,149 @@
-import React, { useState } from 'react';
-import ItemTable from './components/ItemTable';
-import CreateItemModal from './components/CreateItemModal';
-import ItemDetailsModal from './components/ItemDetailsModal';
-import BulkAddModal from './components/BulkAddModal';
+import React, { useState } from "react";
+import { FiSearch } from "react-icons/fi";
+import CreateItemModal from "./components/CreateItemModal";
+import BulkAddModal from "./components/BulkAddModal";
 
-
-
-function App() {
+export default function App() {
   const [items, setItems] = useState([]);
-  const [categories, setCategories] = useState(["Snacks", "Stationery"]);
-  const [showCreate, setShowCreate] = useState(false);
-  const [showBulk, setShowBulk] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [showLowStock, setShowLowStock] = useState(false);
+  const [categories, setCategories] = useState(["hi", "maagi"]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showBulkModal, setShowBulkModal] = useState(false);
 
-  const handleAddItem = (item) => setItems([...items, item]);
-  const handleAddBulkItems = (bulkItems) => setItems([...items, ...bulkItems]);
-  const handleAddCategory = (cat) => {
-    if (!categories.includes(cat)) setCategories([...categories, cat]);
-  };
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [categorySearch, setCategorySearch] = useState("");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const totalStockValue = items.reduce(
-    (sum, item) => sum + Number(item.price || 0) * Number(item.stock || 0),
+    (sum, i) => sum + Number(i.sellingPrice || 0) * Number(i.stockQty || 0),
     0
   );
-  const lowStockCount = items.filter(
-    (item) => Number(item.stock) <= Number(item.lowStockQty || 5)
-  ).length;
-
-  const filteredItems = items.filter((item) => {
-    const matchName = item.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchCat = selectedCategory === "" || item.category === selectedCategory;
-    const matchStock = !showLowStock || parseInt(item.stock) <= parseInt(item.lowStockQty || 0);
-    return matchName && matchCat && matchStock;
-  });
+  const lowStockCount = items.filter((i) => Number(i.stockQty) <= 5).length;
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Inventory Dashboard</h1>
-        <div className="space-x-2">
-          <button
-            onClick={() => setShowCreate(true)}
-            className="bg-indigo-600 text-white px-4 py-2 rounded"
-          >
-            + Create Item
+    <div className="min-h-screen bg-white p-6">
+      {/* Top Bar */}
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Items</h1>
+        <div className="flex items-center gap-2">
+          <button className="border px-4 py-2 rounded text-blue-600 border-blue-400 hover:bg-blue-50">
+            Reports
           </button>
-          <button
-            onClick={() => setShowBulk(true)}
-            className="bg-green-600 text-white px-4 py-2 rounded"
-          >
-            Bulk Add Items
-          </button>
+          <button className="border p-2 rounded">⚙</button>
+          <button className="border p-2 rounded">⌨️</button>
         </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white rounded-xl p-4 shadow-md border">
-          <h3 className="text-sm text-gray-500">Total Stock Value</h3>
-          <p className="text-xl font-semibold text-indigo-700">
-            ₹ {totalStockValue.toFixed(2)}
-          </p>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="bg-gray-50 border rounded-lg p-4">
+          <p className="text-sm text-gray-500">📈 Stock Value</p>
+          <p className="text-xl font-semibold mt-2">₹ {totalStockValue.toFixed(2)}</p>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-md border">
-          <h3 className="text-sm text-gray-500">Items Low In Stock</h3>
-          <p className="text-xl font-semibold text-red-500">{lowStockCount}</p>
+        <div className="bg-gray-50 border rounded-lg p-4">
+          <p className="text-sm text-gray-500">📦 Low Stock</p>
+          <p className="text-xl font-semibold mt-2">{lowStockCount}</p>
+        </div>
+        <div className="hidden lg:block"></div>
+        <div className="flex justify-end items-center gap-2">
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded"
+          >
+            Create Item
+          </button>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4 items-center">
-        <input
-          type="text"
-          placeholder="Search items"
-          className="border px-3 py-2 rounded w-64"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="border px-3 py-2 rounded"
-        >
-          <option value="">All Categories</option>
-          {categories.map((cat) => (
-            <option key={cat}>{cat}</option>
-          ))}
-        </select>
-        <label className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            checked={showLowStock}
-            onChange={() => setShowLowStock(!showLowStock)}
-          />
-          <span>Show Low Stock</span>
-        </label>
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center gap-4 mb-8">
+        <div className="flex items-center border rounded px-3 py-2 w-full sm:w-60">
+          <FiSearch className="text-gray-500 mr-2" />
+          <input type="text" placeholder="Search Item" className="outline-none w-full" />
+        </div>
+
+        {/* Category Dropdown with final color update */}
+        <div className="relative w-full sm:w-60">
+          <div
+            className="border border-violet-300 px-3 py-2 rounded-md cursor-pointer flex justify-between items-center bg-white hover:border-violet-500 transition"
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+          >
+            <span className="text-gray-700">{selectedCategory || "Search Categories"}</span>
+            <svg className="w-4 h-4 text-violet-500" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.293l3.71-4.06a.75.75 0 111.08 1.04l-4.25 4.65a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+            </svg>
+          </div>
+
+          {dropdownOpen && (
+            <div className="absolute top-full mt-1 z-10 w-full bg-white border border-violet-300 rounded-md shadow-lg overflow-hidden">
+              <input
+                type="text"
+                placeholder="Search..."
+                value={categorySearch}
+                onChange={(e) => setCategorySearch(e.target.value)}
+                className="px-3 py-2 w-full border-b border-violet-200 text-sm focus:outline-none"
+              />
+              <div className="max-h-40 overflow-y-auto">
+                {categories
+                  .filter((cat) => cat.toLowerCase().includes(categorySearch.toLowerCase()))
+                  .map((cat, idx) => (
+                    <div
+                      key={idx}
+                      className="flex justify-between items-center px-3 py-2 text-sm hover:bg-violet-50 cursor-pointer transition"
+                      onClick={() => {
+                        setSelectedCategory(cat);
+                        setDropdownOpen(false);
+                      }}
+                    >
+                      <span>{cat} (0)</span>
+                      <button className="text-gray-400 hover:text-violet-600">✏️</button>
+                    </div>
+                  ))}
+              </div>
+              <div
+                className="px-3 py-2 text-violet-600 hover:bg-violet-50 text-sm cursor-pointer border-t border-dashed border-violet-200"
+                onClick={() => {
+                  const newCat = prompt("Enter new category:");
+                  if (newCat && !categories.includes(newCat)) {
+                    setCategories([...categories, newCat]);
+                    setSelectedCategory(newCat);
+                    setDropdownOpen(false);
+                  }
+                }}
+              >
+                + Add Category
+              </div>
+            </div>
+          )}
+        </div>
+
+        <button className="border px-3 py-2 rounded">Show Low Stock</button>
       </div>
 
-      {/* Item Table */}
-      <div className="bg-white shadow-md rounded-lg overflow-hidden border">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-100">
+      {/* Table */}
+      <div className="overflow-x-auto mb-8">
+        <table className="table-auto w-full border border-gray-200 rounded-lg shadow-sm">
+          <thead className="bg-gray-100 text-gray-700">
             <tr>
-              <th className="p-2 text-left">Name</th>
-              <th className="p-2 text-left">Category</th>
-              <th className="p-2 text-left">Stock</th>
-              <th className="p-2 text-left">Price</th>
+              <th className="px-4 py-2 border">Item Name</th>
+              <th className="px-4 py-2 border">Category</th>
+              <th className="px-4 py-2 border">Stock Qty</th>
+              <th className="px-4 py-2 border">Selling Price</th>
             </tr>
           </thead>
           <tbody>
-            {filteredItems.map((item, idx) => (
-              <tr
-                key={idx}
-                onClick={() => setSelectedItem(item)}
-                className="hover:bg-gray-50 cursor-pointer"
-              >
-                <td className="p-2">{item.name}</td>
-                <td className="p-2">{item.category}</td>
-                <td className="p-2">{item.stock}</td>
-                <td className="p-2">₹ {item.price}</td>
-              </tr>
-            ))}
-            {filteredItems.length === 0 && (
-              <tr>
-                <td className="p-4 text-center text-gray-400" colSpan={4}>
-                  No items found.
+            {items.length > 0 ? (
+              items.map((item, idx) => (
+                <tr key={idx} className="text-center">
+                  <td className="px-4 py-2 border">{item.itemName}</td>
+                  <td className="px-4 py-2 border">{item.category}</td>
+                  <td className="px-4 py-2 border">{item.stockQty}</td>
+                  <td className="px-4 py-2 border">₹ {item.sellingPrice}</td>
+                </tr>
+              ))
+            ) : (
+              <tr className="text-center text-gray-400">
+                <td colSpan="4" className="py-4">
+                  No items added yet.
                 </td>
               </tr>
             )}
@@ -136,26 +151,40 @@ function App() {
         </table>
       </div>
 
+      {/* Empty State */}
+      {items.length === 0 && (
+        <div className="text-center mt-10">
+          <div className="mx-auto w-48 h-32 bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
+            📦
+          </div>
+          <h3 className="text-lg font-semibold mb-1">Add all your Items at once!</h3>
+          <p className="text-sm text-gray-500 mb-4">For quicker and easier experience of creating sales invoices</p>
+          <div className="flex justify-center gap-4">
+            <button
+              onClick={() => setShowBulkModal(true)}
+              className="bg-violet-100 text-violet-700 px-4 py-2 rounded hover:bg-violet-200"
+            >
+              Add Items with Excel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Modals */}
-      {showCreate && (
+      {showCreateModal && (
         <CreateItemModal
-          onClose={() => setShowCreate(false)}
-          onAddItem={handleAddItem}
+          onClose={() => setShowCreateModal(false)}
+          onAddItem={(item) => setItems([...items, item])}
           categories={categories}
-          onAddCategory={handleAddCategory}
+          onAddCategory={(cat) => setCategories([...categories, cat])}
         />
       )}
-      {showBulk && (
+      {showBulkModal && (
         <BulkAddModal
-          onClose={() => setShowBulk(false)}
-          onAddBulkItems={handleAddBulkItems}
+          onClose={() => setShowBulkModal(false)}
+          onAddBulkItems={(bulk) => setItems([...items, ...bulk])}
         />
-      )}
-      {selectedItem && (
-        <ItemDetailsModal item={selectedItem} onClose={() => setSelectedItem(null)} />
       )}
     </div>
   );
 }
-
-export default App;
