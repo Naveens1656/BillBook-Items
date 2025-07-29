@@ -19,6 +19,11 @@ export default function App() {
   );
   const lowStockCount = items.filter((i) => Number(i.stockQty) <= 5).length;
 
+  // ✅ Filter items by selected category
+  const filteredItems = selectedCategory
+    ? items.filter((item) => item.category === selectedCategory)
+    : items;
+
   return (
     <div className="min-h-screen bg-white p-6">
       {/* Top Bar */}
@@ -61,7 +66,7 @@ export default function App() {
           <input type="text" placeholder="Search Item" className="outline-none w-full" />
         </div>
 
-        {/* Category Dropdown with final color update */}
+        {/* Category Dropdown with filter support */}
         <div className="relative w-full sm:w-60">
           <div
             className="border border-violet-300 px-3 py-2 rounded-md cursor-pointer flex justify-between items-center bg-white hover:border-violet-500 transition"
@@ -94,8 +99,8 @@ export default function App() {
                         setDropdownOpen(false);
                       }}
                     >
-                      <span>{cat} (0)</span>
-                      <button className="text-gray-400 hover:text-violet-600">✏️</button>
+                      <span>{cat}</span>
+                      <button className="text-gray-400 hover:text-violet-600"></button>
                     </div>
                   ))}
               </div>
@@ -131,8 +136,8 @@ export default function App() {
             </tr>
           </thead>
           <tbody>
-            {items.length > 0 ? (
-              items.map((item, idx) => (
+            {filteredItems.length > 0 ? (
+              filteredItems.map((item, idx) => (
                 <tr key={idx} className="text-center">
                   <td className="px-4 py-2 border">{item.itemName}</td>
                   <td className="px-4 py-2 border">{item.category}</td>
@@ -143,7 +148,7 @@ export default function App() {
             ) : (
               <tr className="text-center text-gray-400">
                 <td colSpan="4" className="py-4">
-                  No items added yet.
+                  No items found for this category.
                 </td>
               </tr>
             )}
@@ -174,7 +179,17 @@ export default function App() {
       {showCreateModal && (
         <CreateItemModal
           onClose={() => setShowCreateModal(false)}
-          onAddItem={(item) => setItems([...items, item])}
+          onAddItem={(item) =>
+            setItems([
+              ...items,
+              {
+                itemName: item.name,
+                category: item.category,
+                stockQty: item.stock,
+                sellingPrice: item.price,
+              },
+            ])
+          }
           categories={categories}
           onAddCategory={(cat) => setCategories([...categories, cat])}
         />
